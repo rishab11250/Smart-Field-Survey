@@ -98,7 +98,7 @@ export default function SurveyPreview() {
                 <Ionicons name="camera" size={18} color={themeColors.tint} />
                 <Text style={[styles.attachmentTitle, { color: themeColors.text }]}>Site Photo</Text>
               </View>
-              <Image source={{ uri: currentSurvey.photoUri }} style={styles.previewImage} />
+              <Image source={{ uri: currentSurvey.photoUri }} style={styles.previewImage} resizeMode="contain" />
             </View>
           ) : (
             <View style={styles.missingBlock}>
