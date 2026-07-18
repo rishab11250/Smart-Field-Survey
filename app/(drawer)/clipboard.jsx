@@ -157,8 +157,8 @@ export default function ClipboardScreen() {
                 style={[styles.saveGalleryBtn, { backgroundColor: themeColors.tint }]} 
                 onPress={handleSaveToGallery}
               >
-                <Ionicons name="download-outline" size={20} color="#FFF" />
-                <Text style={styles.saveGalleryBtnText}>Save</Text>
+                <Ionicons name="download-outline" size={20} color={isDark ? '#065F46' : '#FFF'} />
+                <Text style={[styles.saveGalleryBtnText, { color: isDark ? '#065F46' : '#FFF' }]}>Save</Text>
               </Pressable>
             </View>
           </View>
