@@ -8,7 +8,7 @@ import { useColorScheme } from '../../../hooks/use-color-scheme';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { surveys } = useSurveys();
+  const { surveys, studentDetails } = useSurveys();
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme ?? 'light'];
 
@@ -16,13 +16,6 @@ export default function Dashboard() {
   const todayStr = new Date().toISOString().split('T')[0];
   const todaysSurveys = surveys.filter(s => s.date === todayStr);
   const todayCount = todaysSurveys.length;
-
-  const studentDetails = {
-    name: 'Rishab Chandgothia',
-    id: '108713',
-    class: 'SEM-3',
-    project: 'Smart-Field-Survey'
-  };
 
   const quickActions = [
     {
@@ -112,11 +105,11 @@ export default function Dashboard() {
           <Text style={styles.studentLabel}>STUDENT INSPECTOR</Text>
           <Text style={styles.studentName}>{studentDetails.name}</Text>
           <Text style={styles.studentId}>ID: {studentDetails.id}</Text>
-          <Text style={styles.studentClass}>Semester: {studentDetails.class}</Text>
+          <Text style={styles.studentClass}>Semester: {studentDetails.className}</Text>
           <Text style={styles.studentProject}>Project: {studentDetails.project}</Text>
         </View>
         <View style={styles.studentAvatarContainer}>
-          <Text style={styles.studentAvatarInitials}>RC</Text>
+          <Text style={styles.studentAvatarInitials}>{studentDetails.name ? studentDetails.name.charAt(0) : 'S'}</Text>
         </View>
       </View>
 

@@ -11,6 +11,16 @@ export const SurveyProvider = ({ children }) => {
     setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  const [studentDetails, setStudentDetails] = useState({
+    name: 'Rishab Chandgothia',
+    id: '108713',
+    className: 'SEM-3',
+    course: 'React Native Mobile App Dev',
+    email: 'rishab.chandgothia@college.edu',
+    project: 'Smart-Field-Survey',
+    year: '2026'
+  });
+
   const [surveys, setSurveys] = useState([]);
 
   const [currentSurvey, setCurrentSurvey] = useState({
@@ -66,6 +76,8 @@ export const SurveyProvider = ({ children }) => {
   return (
     <SurveyContext.Provider
       value={{
+        studentDetails,
+        setStudentDetails,
         surveys,
         setSurveys,
         currentSurvey,
