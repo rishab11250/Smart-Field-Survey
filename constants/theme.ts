@@ -5,8 +5,8 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#065F46'; // Emerald Green
+const tintColorDark = '#D1FAE5';  // Sage Green
 
 export const Colors = {
   light: {
@@ -16,14 +16,16 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    accent: '#D1FAE5', // Sage Green accent
   },
   dark: {
     text: '#ECEDEE',
-    background: '#151718',
+    background: '#0F172A', // Deep slate background
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    accent: '#065F46', // Emerald Green accent
   },
 };
 
