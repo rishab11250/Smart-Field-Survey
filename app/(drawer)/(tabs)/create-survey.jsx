@@ -13,21 +13,26 @@ export default function CreateSurvey() {
   const themeColors = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
 
+  const [form, setForm] = useState({ ...currentSurvey });
   const [errors, setErrors] = useState({});
 
   const handleUpdate = (field, value) => {
-    updateCurrentSurvey({ [field]: value });
-    // Clear error for this field if user starts typing
+    setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
   };
 
+  const handleBlur = () => {
+    updateCurrentSurvey(form);
+  };
+
   const validateAndProceed = () => {
+    updateCurrentSurvey(form);
     let newErrors = {};
-    if (!currentSurvey.siteName?.trim()) newErrors.siteName = 'Site Name is required';
-    if (!currentSurvey.clientName?.trim()) newErrors.clientName = 'Client Name is required';
-    if (!currentSurvey.description?.trim()) newErrors.description = 'Description is required';
+    if (!form.siteName?.trim()) newErrors.siteName = 'Site Name is required';
+    if (!form.clientName?.trim()) newErrors.clientName = 'Client Name is required';
+    if (!form.description?.trim()) newErrors.description = 'Description is required';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -35,12 +40,11 @@ export default function CreateSurvey() {
       return;
     }
 
-    // Proceed to Module 7 (Preview)
     router.push('/preview');
   };
 
   const renderPriorityButton = (label, value, color) => {
-    const isSelected = currentSurvey.priority === value;
+    const isSelected = form.priority === value;
     return (
       <Pressable
         key={value}
@@ -67,7 +71,7 @@ export default function CreateSurvey() {
     <ScrollView 
       style={[styles.container, { backgroundColor: themeColors.background }]}
       contentContainerStyle={styles.contentContainer}
-      keyboardShouldPersistTaps="handled"
+      keyboardShouldPersistTaps="always"
     >
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: themeColors.text }]}>Draft New Survey</Text>
@@ -83,8 +87,9 @@ export default function CreateSurvey() {
           ]}
           placeholder="e.g., Downtown Metro Station"
           placeholderTextColor="#94A3B8"
-          value={currentSurvey.siteName}
+          value={form.siteName}
           onChangeText={(text) => handleUpdate('siteName', text)}
+          onBlur={handleBlur}
         />
         {errors.siteName && <Text style={styles.errorText}>{errors.siteName}</Text>}
       </View>
@@ -98,8 +103,9 @@ export default function CreateSurvey() {
           ]}
           placeholder="e.g., City Transit Corp"
           placeholderTextColor="#94A3B8"
-          value={currentSurvey.clientName}
+          value={form.clientName}
           onChangeText={(text) => handleUpdate('clientName', text)}
+          onBlur={handleBlur}
         />
         {errors.clientName && <Text style={styles.errorText}>{errors.clientName}</Text>}
       </View>
@@ -114,8 +120,9 @@ export default function CreateSurvey() {
           ]}
           placeholder="Detailed notes regarding the inspection..."
           placeholderTextColor="#94A3B8"
-          value={currentSurvey.description}
+          value={form.description}
           onChangeText={(text) => handleUpdate('description', text)}
+          onBlur={handleBlur}
           multiline
           textAlignVertical="top"
         />
@@ -140,8 +147,9 @@ export default function CreateSurvey() {
           ]}
           placeholder="YYYY-MM-DD"
           placeholderTextColor="#94A3B8"
-          value={currentSurvey.date}
+          value={form.date}
           onChangeText={(text) => handleUpdate('date', text)}
+          onBlur={handleBlur}
         />
       </View>
 
