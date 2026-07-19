@@ -2,71 +2,80 @@ import React from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { View, Pressable, Text, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Colors } from '../../../constants/theme';
+import { Colors, Spacing, Radius } from '../../../constants/theme';
 import { useColorScheme } from '../../../hooks/use-color-scheme';
 import { DrawerToggleButton } from '@react-navigation/drawer';
 import { useSurveys } from '../../../context/SurveyContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? 'light'];
+  const tc = Colors[colorScheme ?? 'light'];
   const router = useRouter();
+  const isDark = colorScheme === 'dark';
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: themeColors.tint,
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: tc.tabIconSelected,
+        tabBarInactiveTintColor: tc.tabIconDefault,
         tabBarStyle: {
-          backgroundColor: themeColors.background,
+          backgroundColor: isDark ? tc.chrome : '#FFF',
           borderTopWidth: 1,
-          borderTopColor: colorScheme === 'dark' ? '#333' : '#eee',
-          paddingBottom: 5,
-          height: 60,
+          borderTopColor: tc.divider,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 8,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarItemStyle: {
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '700',
+          marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
         },
         headerStyle: {
-          backgroundColor: themeColors.background,
+          backgroundColor: isDark ? tc.chrome : '#FFF',
+          elevation: 0,
+          shadowOpacity: 0,
           borderBottomWidth: 1,
-          borderBottomColor: colorScheme === 'dark' ? '#333' : '#eee',
+          borderBottomColor: tc.divider,
         },
-        headerTintColor: themeColors.text,
-        // Custom left button to toggle drawer on tab screens
+        headerTintColor: tc.text,
+        headerTitleStyle: {
+          fontWeight: '800',
+          fontSize: 17,
+          letterSpacing: -0.5,
+        },
         headerLeft: () => (
-          <DrawerToggleButton tintColor={themeColors.text} />
+          <DrawerToggleButton tintColor={tc.text} />
         ),
-        // Custom right buttons: Theme Toggle + Profile Avatar
         headerRight: () => {
           const { toggleTheme } = useSurveys();
           return (
             <View style={styles.headerRightContainer}>
               <Pressable
                 onPress={toggleTheme}
-                style={styles.themeToggleButton}
+                style={[styles.themeToggle, { backgroundColor: isDark ? tc.surface : tc.background }]}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons
-                  name={colorScheme === 'dark' ? 'sunny' : 'moon'}
-                  size={20}
-                  color={themeColors.text}
+                  name={isDark ? 'sunny' : 'moon'}
+                  size={15}
+                  color={tc.textSecondary}
                 />
               </Pressable>
               <Pressable
                 onPress={() => router.push('/profile')}
-                style={[
-                  styles.avatarHeaderButton,
-                  {
-                    backgroundColor: colorScheme === 'dark' ? '#065F46' : '#D1FAE5',
-                  }
-                ]}
+                style={[styles.avatarBadge, { backgroundColor: tc.tint }]}
               >
-                <Text
-                  style={[
-                    styles.avatarHeaderText,
-                    { color: colorScheme === 'dark' ? '#D1FAE5' : '#065F46' }
-                  ]}
-                >
-                  RC
-                </Text>
+                <Text style={styles.avatarLetter}>RC</Text>
               </Pressable>
             </View>
           );
@@ -79,7 +88,7 @@ export default function TabLayout() {
           title: 'Dashboard',
           tabBarLabel: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <Ionicons name="compass" size={size} color={color} />
           ),
         }}
       />
@@ -99,7 +108,7 @@ export default function TabLayout() {
           title: 'History',
           tabBarLabel: 'History',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list" size={size} color={color} />
+            <Ionicons name="map" size={size} color={color} />
           ),
         }}
       />
@@ -122,24 +131,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  themeToggleButton: {
-    marginRight: 8,
-    padding: 8,
+  themeToggle: {
+    marginRight: 10,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarHeaderButton: {
+  avatarBadge: {
     marginRight: 16,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#065F4630',
   },
-  avatarHeaderText: {
-    fontWeight: 'bold',
-    fontSize: 14,
+  avatarLetter: {
+    fontWeight: '800',
+    fontSize: 12,
+    color: '#FFF',
+    letterSpacing: 0.5,
   },
 });

@@ -2,19 +2,53 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSurveys } from '../../../context/SurveyContext';
-import { Colors } from '../../../constants/theme';
+import { Colors, Spacing, Radius } from '../../../constants/theme';
 import { useColorScheme } from '../../../hooks/use-color-scheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
+
+const Field = ({ label, field, required, placeholder, multiline, tc, isDark, value, onChangeText, onFocus, onBlur, focusedField, errors, ...rest }) => {
+  const focused = focusedField === field;
+  const hasError = errors[field];
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={[styles.fieldLabel, { color: tc.text }]}>
+        {label} {required && <Text style={{ color: '#DC2626' }}> *</Text>}
+      </Text>
+      <View style={[
+        styles.fieldWrap,
+        focused && { borderColor: tc.tint },
+        hasError && { borderColor: '#DC2626' },
+        { backgroundColor: isDark ? tc.inputBg : '#F8FAFC', borderColor: hasError ? '#DC2626' : (focused ? tc.tint : tc.cardBorder) },
+      ]}>
+        {focused && <View style={[styles.fieldAccent, { backgroundColor: tc.tint }]} />}
+        <TextInput
+          style={[styles.fieldInput, { color: tc.text }, multiline && styles.textArea]}
+          placeholder={placeholder}
+          placeholderTextColor={tc.muted}
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          multiline={multiline}
+          textAlignVertical={multiline ? 'top' : 'center'}
+          {...rest}
+        />
+      </View>
+      {hasError && <Text style={styles.error}>{errors[field]}</Text>}
+    </View>
+  );
+};
 
 export default function CreateSurvey() {
   const router = useRouter();
   const { currentSurvey, updateCurrentSurvey } = useSurveys();
   const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? 'light'];
+  const tc = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
 
   const [form, setForm] = useState({ ...currentSurvey });
   const [errors, setErrors] = useState({});
+  const [focusedField, setFocusedField] = useState(null);
 
   const handleUpdate = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -29,288 +63,182 @@ export default function CreateSurvey() {
 
   const validateAndProceed = () => {
     updateCurrentSurvey(form);
-    let newErrors = {};
-    if (!form.siteName?.trim()) newErrors.siteName = 'Site Name is required';
-    if (!form.clientName?.trim()) newErrors.clientName = 'Client Name is required';
-    if (!form.description?.trim()) newErrors.description = 'Description is required';
+    const newErrors = {};
+    if (!form.siteName?.trim()) newErrors.siteName = 'Required';
+    if (!form.clientName?.trim()) newErrors.clientName = 'Required';
+    if (!form.description?.trim()) newErrors.description = 'Required';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      Alert.alert('Missing Fields', 'Please fill out all required fields before proceeding.');
+      Alert.alert('Incomplete', 'Please fill in all required fields.');
       return;
     }
-
     router.push('/preview');
   };
 
-  const renderPriorityButton = (label, value, color) => {
-    const isSelected = form.priority === value;
-    return (
-      <Pressable
-        key={value}
-        style={[
-          styles.priorityButton,
-          isSelected && { backgroundColor: color, borderColor: color },
-          !isSelected && { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }
-        ]}
-        onPress={() => handleUpdate('priority', value)}
-      >
-        <Text
-          style={[
-            styles.priorityText,
-            isSelected ? { color: '#FFF' } : { color: themeColors.text }
-          ]}
-        >
-          {label}
-        </Text>
-      </Pressable>
-    );
-  };
+  const priorities = [
+    { label: 'Low', value: 'Low', color: tc.tint },
+    { label: 'Medium', value: 'Medium', color: tc.accent },
+    { label: 'High', value: 'High', color: '#DC2626' },
+  ];
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: themeColors.background }]}
-      contentContainerStyle={styles.contentContainer}
+    <ScrollView
+      style={[styles.container, { backgroundColor: tc.background }]}
+      contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="always"
     >
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Draft New Survey</Text>
-        <Text style={styles.headerSub}>Data saves automatically to draft.</Text>
+      <View style={styles.headerArea}>
+        <Text style={[styles.headerTitle, { color: tc.text }]}>Draft Survey</Text>
+        <Text style={[styles.headerSub, { color: tc.muted }]}>Data persists automatically to your current draft.</Text>
       </View>
 
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Site Name *</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { color: themeColors.text, backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: errors.siteName ? '#EF4444' : (isDark ? '#334155' : '#E2E8F0') }
-          ]}
-          placeholder="e.g., Downtown Metro Station"
-          placeholderTextColor="#94A3B8"
-          value={form.siteName}
-          onChangeText={(text) => handleUpdate('siteName', text)}
-          onBlur={handleBlur}
-        />
-        {errors.siteName && <Text style={styles.errorText}>{errors.siteName}</Text>}
-      </View>
+      <Field
+        label="Site Name"
+        field="siteName"
+        required
+        placeholder="e.g. Downtown Metro Station"
+        tc={tc}
+        isDark={isDark}
+        value={form.siteName}
+        onChangeText={(text) => handleUpdate('siteName', text)}
+        onFocus={() => setFocusedField('siteName')}
+        onBlur={() => { setFocusedField(null); handleBlur(); }}
+        focusedField={focusedField}
+        errors={errors}
+      />
+      <Field
+        label="Client Name"
+        field="clientName"
+        required
+        placeholder="e.g. City Transit Corp"
+        tc={tc}
+        isDark={isDark}
+        value={form.clientName}
+        onChangeText={(text) => handleUpdate('clientName', text)}
+        onFocus={() => setFocusedField('clientName')}
+        onBlur={() => { setFocusedField(null); handleBlur(); }}
+        focusedField={focusedField}
+        errors={errors}
+      />
+      <Field
+        label="Description"
+        field="description"
+        required
+        placeholder="Detailed inspection notes..."
+        multiline
+        tc={tc}
+        isDark={isDark}
+        value={form.description}
+        onChangeText={(text) => handleUpdate('description', text)}
+        onFocus={() => setFocusedField('description')}
+        onBlur={() => { setFocusedField(null); handleBlur(); }}
+        focusedField={focusedField}
+        errors={errors}
+      />
 
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Client Name *</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { color: themeColors.text, backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: errors.clientName ? '#EF4444' : (isDark ? '#334155' : '#E2E8F0') }
-          ]}
-          placeholder="e.g., City Transit Corp"
-          placeholderTextColor="#94A3B8"
-          value={form.clientName}
-          onChangeText={(text) => handleUpdate('clientName', text)}
-          onBlur={handleBlur}
-        />
-        {errors.clientName && <Text style={styles.errorText}>{errors.clientName}</Text>}
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Description *</Text>
-        <TextInput
-          style={[
-            styles.input,
-            styles.textArea,
-            { color: themeColors.text, backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: errors.description ? '#EF4444' : (isDark ? '#334155' : '#E2E8F0') }
-          ]}
-          placeholder="Detailed notes regarding the inspection..."
-          placeholderTextColor="#94A3B8"
-          value={form.description}
-          onChangeText={(text) => handleUpdate('description', text)}
-          onBlur={handleBlur}
-          multiline
-          textAlignVertical="top"
-        />
-        {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Priority Level</Text>
+      <View style={styles.fieldGroup}>
+        <Text style={[styles.fieldLabel, { color: tc.text }]}>Priority</Text>
         <View style={styles.priorityRow}>
-          {renderPriorityButton('Low', 'Low', '#10B981')}
-          {renderPriorityButton('Medium', 'Medium', '#F59E0B')}
-          {renderPriorityButton('High', 'High', '#EF4444')}
+          {priorities.map((p) => {
+            const sel = form.priority === p.value;
+            return (
+              <Pressable
+                key={p.value}
+                style={[styles.priorityBtn,
+                  sel
+                    ? { backgroundColor: p.color, borderColor: p.color }
+                    : { backgroundColor: isDark ? tc.card : '#F1F5F9', borderColor: tc.cardBorder },
+                ]}
+                onPress={() => {
+                  handleUpdate('priority', p.value);
+                  updateCurrentSurvey({ ...form, priority: p.value });
+                }}
+              >
+                <View style={[styles.priDot, { backgroundColor: sel ? '#FFF' : p.color }]} />
+                <Text style={[styles.priLabel, { color: sel ? '#FFF' : tc.text }]}>{p.label}</Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Date of Survey</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { color: themeColors.text, backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: isDark ? '#334155' : '#E2E8F0' }
-          ]}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor="#94A3B8"
-          value={form.date}
-          onChangeText={(text) => handleUpdate('date', text)}
-          onBlur={handleBlur}
-        />
-      </View>
-
-      {/* Attachment Indicators */}
-      <View style={styles.attachmentContainer}>
-        <Text style={[styles.attachmentTitle, { color: themeColors.text }]}>Draft Attachments</Text>
-        
-        <View style={styles.attachmentBadgeRow}>
-          <Pressable 
-            style={[styles.badge, currentSurvey.photoUri ? styles.badgeActive : styles.badgeInactive]}
-            onPress={() => router.push('/camera')}
-          >
-            <Ionicons name="camera" size={16} color={currentSurvey.photoUri ? '#FFF' : '#94A3B8'} />
-            <Text style={[styles.badgeText, currentSurvey.photoUri ? {color: '#FFF'} : {color: '#94A3B8'}]}>Photo</Text>
-          </Pressable>
-          
-          <Pressable 
-            style={[styles.badge, currentSurvey.location ? styles.badgeActive : styles.badgeInactive]}
-            onPress={() => router.push('/location')}
-          >
-            <Ionicons name="location" size={16} color={currentSurvey.location ? '#FFF' : '#94A3B8'} />
-            <Text style={[styles.badgeText, currentSurvey.location ? {color: '#FFF'} : {color: '#94A3B8'}]}>Location</Text>
-          </Pressable>
-
-          <Pressable 
-            style={[styles.badge, currentSurvey.contact ? styles.badgeActive : styles.badgeInactive]}
-            onPress={() => router.push('/contacts')}
-          >
-            <Ionicons name="person" size={16} color={currentSurvey.contact ? '#FFF' : '#94A3B8'} />
-            <Text style={[styles.badgeText, currentSurvey.contact ? {color: '#FFF'} : {color: '#94A3B8'}]}>Contact</Text>
-          </Pressable>
+      <View style={styles.fieldGroup}>
+        <Text style={[styles.fieldLabel, { color: tc.text }]}>Date</Text>
+        <View style={[styles.fieldWrap, { backgroundColor: isDark ? tc.inputBg : '#F8FAFC', borderColor: tc.cardBorder }]}>
+          <TextInput
+            style={[styles.fieldInput, { color: tc.text }]}
+            placeholder="YYYY-MM-DD"
+            placeholderTextColor={tc.muted}
+            value={form.date}
+            onChangeText={(text) => handleUpdate('date', text)}
+            onBlur={handleBlur}
+          />
         </View>
       </View>
 
-      <Pressable 
-        style={[styles.submitBtn, { backgroundColor: themeColors.tint }]} 
-        onPress={validateAndProceed}
-      >
-        <Text style={[styles.submitBtnText, { color: isDark ? '#065F46' : '#FFF' }]}>
-          Proceed to Preview
-        </Text>
-        <Ionicons name="arrow-forward" size={20} color={isDark ? '#065F46' : '#FFF'} />
+      <View style={[styles.attachCard, { backgroundColor: tc.card, borderColor: tc.cardBorder }]}>
+        <View style={[styles.attachAccent, { backgroundColor: tc.tint }]} />
+        <View style={styles.attachBody}>
+          <Text style={[styles.attachTitle, { color: tc.text }]}>Attachments</Text>
+          <View style={styles.attachRow}>
+            {[
+              { label: 'Photo', icon: 'camera', route: '/camera', active: !!currentSurvey.photoUri },
+              { label: 'Location', icon: 'location', route: '/location', active: !!currentSurvey.location },
+              { label: 'Contact', icon: 'person', route: '/contacts', active: !!currentSurvey.contact },
+            ].map((a) => (
+              <Pressable
+                key={a.label}
+                style={[styles.attachPill,
+                  a.active
+                    ? { backgroundColor: tc.tint, borderColor: tc.tint }
+                    : { backgroundColor: 'transparent', borderColor: tc.cardBorder },
+                ]}
+                onPress={() => {
+                  updateCurrentSurvey(form);
+                  router.push(a.route);
+                }}
+              >
+                <Ionicons name={a.icon} size={14} color={a.active ? '#FFF' : tc.muted} />
+                <Text style={[styles.attachPillText, { color: a.active ? '#FFF' : tc.muted }]}>{a.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+
+      <Pressable style={[styles.submitBtn, { backgroundColor: tc.tint }]} onPress={validateAndProceed}>
+        <Ionicons name="compass" size={16} color="#FFF" />
+        <Text style={styles.submitText}>Review & Submit</Text>
       </Pressable>
-
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  headerSub: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-  },
-  formGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-  },
-  textArea: {
-    height: 100,
-  },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
-  },
-  priorityRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  priorityButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    marginHorizontal: 4,
-  },
-  priorityText: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  attachmentContainer: {
-    marginTop: 8,
-    marginBottom: 32,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(150, 150, 150, 0.05)',
-  },
-  attachmentTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  attachmentBadgeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  badgeActive: {
-    backgroundColor: '#065F46',
-    borderColor: '#065F46',
-  },
-  badgeInactive: {
-    backgroundColor: 'transparent',
-    borderColor: '#CBD5E1',
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  submitBtn: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  submitBtnText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 8,
-  },
+  container: { flex: 1 },
+  content: { padding: Spacing.lg, paddingBottom: Spacing['2xl'] },
+  headerArea: { marginBottom: Spacing.lg },
+  headerTitle: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerSub: { fontSize: 13, fontWeight: '500' },
+  fieldGroup: { marginBottom: Spacing.lg },
+  fieldLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.3, marginBottom: Spacing.sm },
+  fieldWrap: { borderRadius: Radius.md, borderWidth: 1, flexDirection: 'row', overflow: 'hidden' },
+  fieldAccent: { width: 3 },
+  fieldInput: { flex: 1, paddingHorizontal: Spacing.md, paddingVertical: 13, fontSize: 15, fontWeight: '600' },
+  textArea: { height: 100, paddingTop: 13 },
+  error: { color: '#DC2626', fontSize: 11, fontWeight: '600', marginTop: 4, marginLeft: 4 },
+  priorityRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  priorityBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 11, borderRadius: Radius.md, borderWidth: 1, marginHorizontal: 4 },
+  priDot: { width: 7, height: 7, borderRadius: 3.5, marginRight: 6 },
+  priLabel: { fontWeight: '700', fontSize: 13, letterSpacing: -0.2 },
+  attachCard: { borderRadius: Radius.lg, borderWidth: 1, marginBottom: Spacing.xl, overflow: 'hidden' },
+  attachAccent: { height: 3 },
+  attachBody: { padding: Spacing.md },
+  attachTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: Spacing.md },
+  attachRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  attachPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 6, borderWidth: 1 },
+  attachPillText: { fontSize: 11, fontWeight: '700', marginLeft: 6, letterSpacing: -0.2 },
+  submitBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 15, borderRadius: Radius.md },
+  submitText: { color: '#FFF', fontSize: 15, fontWeight: '700', marginLeft: Spacing.sm, letterSpacing: -0.2 },
 });

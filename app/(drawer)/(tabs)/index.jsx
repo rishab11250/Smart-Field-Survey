@@ -1,397 +1,225 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSurveys } from '../../../context/SurveyContext';
-import { Colors } from '../../../constants/theme';
+import { Colors, Spacing, Radius } from '../../../constants/theme';
 import { useColorScheme } from '../../../hooks/use-color-scheme';
+
+function Striker({ priority }) {
+  const map = { high: '#DC2626', medium: '#C4663F', low: '#065F46' };
+  return <View style={[styles.striker, { backgroundColor: map[priority?.toLowerCase()] || '#065F46' }]} />;
+}
 
 export default function Dashboard() {
   const router = useRouter();
   const { surveys, studentDetails } = useSurveys();
   const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? 'light'];
+  const tc = Colors[colorScheme ?? 'light'];
+  const isDark = colorScheme === 'dark';
 
-  // Calculate today's survey count dynamically
   const todayStr = new Date().toISOString().split('T')[0];
-  const todaysSurveys = surveys.filter(s => s.date === todayStr);
-  const todayCount = todaysSurveys.length;
+  const todayCount = surveys.filter(s => s.date === todayStr).length;
 
   const quickActions = [
-    {
-      title: 'New Survey',
-      icon: 'document-text',
-      color: '#065F46',
-      route: '/create-survey'
-    },
-    {
-      title: 'Camera',
-      icon: 'camera',
-      color: '#EF4444',
-      route: '/camera'
-    },
-    {
-      title: 'Location',
-      icon: 'location',
-      color: '#10B981',
-      route: '/location'
-    },
-    {
-      title: 'Contacts',
-      icon: 'people',
-      color: '#F59E0B',
-      route: '/contacts'
-    }
+    { title: 'New Survey', icon: 'document-text', color: tc.tint, route: '/create-survey' },
+    { title: 'Camera', icon: 'camera', color: '#DC2626', route: '/camera' },
+    { title: 'Location', icon: 'location', color: tc.tint, route: '/location' },
+    { title: 'Contacts', icon: 'people', color: tc.accent, route: '/contacts' },
   ];
 
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'high': return '#EF4444';
-      case 'medium': return '#F59E0B';
-      default: return '#10B981';
+  const getPriColor = (p) => {
+    switch (p?.toLowerCase()) {
+      case 'high': return '#DC2626';
+      case 'medium': return tc.accent;
+      default: return tc.tint;
     }
   };
 
-  const renderRecentSurveyItem = ({ item }) => (
-    <Pressable
-      style={[
-        styles.surveyCard,
-        {
-          backgroundColor: colorScheme === 'dark' ? '#1E293B' : '#FFFFFF',
-          borderColor: colorScheme === 'dark' ? '#334155' : '#E2E8F0',
-        }
-      ]}
-      onPress={() => router.push({ pathname: '/history', params: { search: item.id } })}
-    >
-      <View style={styles.surveyHeader}>
-        <Text style={[styles.surveyId, { color: '#065F46' }]}>{item.id}</Text>
-        <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(item.priority) + '20' }]}>
-          <Text style={[styles.priorityText, { color: getPriorityColor(item.priority) }]}>
-            {item.priority}
-          </Text>
-        </View>
-      </View>
-      
-      <Text style={[styles.siteName, { color: themeColors.text }]}>{item.siteName}</Text>
-      <Text style={styles.clientName}>Client: {item.clientName}</Text>
-      
-      <View style={styles.surveyFooter}>
-        <Ionicons name="calendar-outline" size={14} color="#64748B" />
-        <Text style={styles.surveyDate}>{item.date}</Text>
-      </View>
-    </Pressable>
-  );
-
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: themeColors.background }]}
-      contentContainerStyle={styles.contentContainer}
+    <ScrollView
+      style={[styles.container, { backgroundColor: tc.background }]}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Welcome Area */}
-      <View style={styles.welcomeContainer}>
-        <View>
-          <Text style={[styles.welcomeSub, { color: '#64748B' }]}>Welcome Back,</Text>
-          <Text style={[styles.welcomeTitle, { color: themeColors.text }]}>Field Inspector 👋</Text>
+      {/* Hero — dark chrome, not green */}
+      <View style={[styles.hero, { backgroundColor: tc.chrome }]}>
+        <View style={styles.heroTop}>
+          <View>
+            <Text style={styles.heroGreeting}>Good morning,</Text>
+            <Text style={styles.heroName}>{studentDetails.name?.split(' ')[0]}</Text>
+            <Text style={styles.heroMeta}>ID {studentDetails.id}  ·  {studentDetails.className}</Text>
+          </View>
+          <View style={styles.heroEmblem}>
+            <Ionicons name="compass" size={36} color="#FFF" />
+          </View>
         </View>
-        <View style={[styles.avatarIcon, { backgroundColor: '#065F4620' }]}>
-          <Ionicons name="construct" size={24} color="#065F46" />
-        </View>
-      </View>
-
-      {/* Student Details Card */}
-      <View style={[styles.studentCard, { backgroundColor: '#065F46' }]}>
-        <View style={styles.studentInfoLeft}>
-          <Text style={styles.studentLabel}>STUDENT INSPECTOR</Text>
-          <Text style={styles.studentName}>{studentDetails.name}</Text>
-          <Text style={styles.studentId}>ID: {studentDetails.id}</Text>
-          <Text style={styles.studentClass}>Semester: {studentDetails.className}</Text>
-          <Text style={styles.studentProject}>Project: {studentDetails.project}</Text>
-        </View>
-        <View style={styles.studentAvatarContainer}>
-          <Text style={styles.studentAvatarInitials}>{studentDetails.name ? studentDetails.name.charAt(0) : 'S'}</Text>
-        </View>
-      </View>
-
-      {/* Stats Summary Card */}
-      <View style={styles.statsRow}>
-        <View style={[styles.statBox, { backgroundColor: colorScheme === 'dark' ? '#1E293B' : '#ECFDF5', borderColor: '#10B98120' }]}>
-          <Ionicons name="today" size={24} color="#10B981" />
-          <Text style={[styles.statCount, { color: themeColors.text }]}>{todayCount}</Text>
-          <Text style={styles.statLabel}>Today's Surveys</Text>
-        </View>
-        <View style={[styles.statBox, { backgroundColor: colorScheme === 'dark' ? '#1E293B' : '#EEF2F6', borderColor: '#065F4620' }]}>
-          <Ionicons name="documents" size={24} color="#065F46" />
-          <Text style={[styles.statCount, { color: themeColors.text }]}>{surveys.length}</Text>
-          <Text style={styles.statLabel}>Total Surveys</Text>
+        <View style={styles.heroStats}>
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatNum}>{todayCount}</Text>
+            <Text style={styles.heroStatLabel}>Today</Text>
+          </View>
+          <View style={[styles.heroStatDivider, { backgroundColor: 'rgba(255,255,255,0.15)' }]} />
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatNum}>{surveys.length}</Text>
+            <Text style={styles.heroStatLabel}>Total</Text>
+          </View>
         </View>
       </View>
 
-      {/* Quick Action Grid */}
-      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Quick Actions</Text>
+      {/* Field Tools */}
+      <Text style={[styles.sectionTitle, { color: tc.muted }]}>FIELD TOOLS</Text>
       <View style={styles.grid}>
-        {quickActions.map((action, index) => (
+        {quickActions.map((a, i) => (
           <Pressable
-            key={index}
-            style={[
-              styles.gridItem,
-              {
-                backgroundColor: colorScheme === 'dark' ? '#1E293B' : '#FFFFFF',
-                borderColor: colorScheme === 'dark' ? '#334155' : '#E2E8F0',
-              }
-            ]}
-            onPress={() => router.push(action.route)}
+            key={i}
+            style={[styles.gridItem, { backgroundColor: tc.card, borderColor: tc.cardBorder }]}
+            onPress={() => router.push(a.route)}
           >
-            <View style={[styles.actionIconContainer, { backgroundColor: action.color + '15' }]}>
-              <Ionicons name={action.icon} size={24} color={action.color} />
+            <View style={[styles.gridIconWrap, { backgroundColor: a.color + '12' }]}>
+              <Ionicons name={a.icon} size={24} color={a.color} />
             </View>
-            <Text style={[styles.actionTitle, { color: themeColors.text }]}>{action.title}</Text>
+            <Text style={[styles.gridLabel, { color: tc.text }]}>{a.title}</Text>
           </Pressable>
         ))}
       </View>
 
-      {/* Recent Survey Summary */}
-      <View style={styles.recentHeaderRow}>
-        <Text style={[styles.sectionTitle, { color: themeColors.text, marginBottom: 0 }]}>Recent Surveys</Text>
+      {/* Recent Surveys */}
+      <View style={styles.recentHeader}>
+        <Text style={[styles.sectionTitle, { color: tc.muted }]}>RECENT SURVEYS</Text>
         <Pressable onPress={() => router.push('/history')}>
-          <Text style={{ color: '#065F46', fontWeight: '600' }}>View All</Text>
+          <Text style={[styles.viewAll, { color: tc.tint }]}>View all</Text>
         </Pressable>
       </View>
 
       {surveys.length === 0 ? (
-        <View style={[styles.emptyContainer, { backgroundColor: colorScheme === 'dark' ? '#1E293B' : '#F8FAFC' }]}>
-          <Ionicons name="document-text-outline" size={48} color="#94A3B8" />
-          <Text style={[styles.emptyText, { color: '#64748B' }]}>No surveys conducted yet.</Text>
+        <View style={[styles.emptyCard, { backgroundColor: tc.card, borderColor: tc.cardBorder }]}>
+          <View style={[styles.emptyIconBox, { backgroundColor: tc.tintLight }]}>
+            <Ionicons name="compass-outline" size={30} color={tc.tint} />
+          </View>
+          <Text style={[styles.emptyTitle, { color: tc.text }]}>Ready for the field</Text>
+          <Text style={[styles.emptySub, { color: tc.muted }]}>Your first survey is a tap away</Text>
         </View>
       ) : (
-        <FlatList
-          data={surveys.slice(0, 3)}
-          renderItem={renderRecentSurveyItem}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-        />
+        surveys.slice(0, 3).map((item) => (
+          <Pressable
+            key={item.id}
+            style={[styles.surveyCard, { backgroundColor: tc.card, borderColor: tc.cardBorder }]}
+            onPress={() => router.push({ pathname: '/history', params: { search: item.id } })}
+          >
+            <Striker priority={item.priority} />
+            <View style={styles.surveyBody}>
+              <View style={styles.surveyTop}>
+                <Text style={[styles.surveyId, { color: tc.tint }]}>{item.id}</Text>
+                <View style={[styles.surveyPill, { backgroundColor: getPriColor(item.priority) + '15' }]}>
+                  <Text style={[styles.surveyPillText, { color: getPriColor(item.priority) }]}>{item.priority}</Text>
+                </View>
+              </View>
+              <Text style={[styles.surveySite, { color: tc.text }]}>{item.siteName}</Text>
+              <View style={styles.surveyFoot}>
+                <Ionicons name="calendar-outline" size={11} color={tc.muted} />
+                <Text style={[styles.surveyDate, { color: tc.muted }]}>{item.date}</Text>
+              </View>
+            </View>
+          </Pressable>
+        ))
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1 },
+  content: { paddingBottom: Spacing['2xl'] },
+
+  hero: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    borderBottomLeftRadius: Radius.xl,
+    borderBottomRightRadius: Radius.xl,
+    marginBottom: Spacing.lg,
   },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  welcomeContainer: {
+  heroTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 16,
+    alignItems: 'flex-start',
+    marginBottom: Spacing.lg,
   },
-  welcomeSub: {
-    fontSize: 14,
-    fontWeight: '500',
+  heroGreeting: { color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: '600', letterSpacing: 0.5 },
+  heroName: { color: '#FFF', fontSize: 26, fontWeight: '800', letterSpacing: -0.5, marginTop: 2 },
+  heroMeta: { color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: '500', marginTop: 4 },
+  heroEmblem: {
+    width: 58, height: 58, borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
-  avatarIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  studentCard: {
-    borderRadius: 16,
-    padding: 20,
+  heroStats: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: Radius.md,
+    padding: Spacing.md,
   },
-  studentInfoLeft: {
-    flex: 1,
-  },
-  studentLabel: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 10,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  studentName: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  studentId: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 13,
-    marginBottom: 2,
-  },
-  studentClass: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  studentProject: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
-  },
-  studentAvatarContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
-  },
-  studentAvatarInitials: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  statBox: {
-    flex: 0.48,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  statCount: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginVertical: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
-  },
+  heroStat: { flex: 1, alignItems: 'center' },
+  heroStatNum: { color: '#FFF', fontSize: 24, fontWeight: '800', letterSpacing: -1 },
+  heroStatLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '600', marginTop: 2, letterSpacing: 0.5 },
+  heroStatDivider: { width: 1, marginVertical: 4 },
+
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
+    fontSize: 11, fontWeight: '700', letterSpacing: 1.5,
+    marginBottom: Spacing.md, paddingHorizontal: Spacing.lg,
   },
+
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'row', flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing['2xl'],
   },
   gridItem: {
     width: '48%',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    borderRadius: Radius.lg, borderWidth: 1,
+    padding: Spacing.lg, alignItems: 'center',
+    marginBottom: Spacing.md,
   },
-  actionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
+  gridIconWrap: {
+    width: 50, height: 50, borderRadius: Radius.md,
+    justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.sm,
   },
-  actionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+  gridLabel: { fontSize: 14, fontWeight: '700', letterSpacing: -0.2 },
+
+  recentHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingRight: Spacing.lg, marginBottom: Spacing.md,
   },
-  recentHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
+  viewAll: { fontWeight: '700', fontSize: 13, letterSpacing: -0.2 },
+
   surveyCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  surveyHeader: {
+    marginHorizontal: Spacing.lg,
+    borderRadius: Radius.lg, borderWidth: 1,
+    marginBottom: Spacing.md,
+    overflow: 'hidden',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
   },
-  surveyId: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  striker: { width: 4 },
+  surveyBody: { flex: 1, padding: Spacing.md },
+  surveyTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  surveyId: { fontSize: 12, fontWeight: '700', marginRight: Spacing.sm },
+  surveyPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  surveyPillText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
+  surveySite: { fontSize: 15, fontWeight: '700', letterSpacing: -0.3, marginBottom: 6 },
+  surveyFoot: { flexDirection: 'row', alignItems: 'center' },
+  surveyDate: { fontSize: 11, marginLeft: 4, fontWeight: '500' },
+
+  emptyCard: {
+    marginHorizontal: Spacing.lg,
+    borderRadius: Radius.lg, borderWidth: 1,
+    padding: Spacing.xl, alignItems: 'center',
   },
-  priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+  emptyIconBox: {
+    width: 58, height: 58, borderRadius: Radius.lg,
+    justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.md,
   },
-  priorityText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  siteName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  clientName: {
-    fontSize: 13,
-    color: '#64748B',
-    marginBottom: 8,
-  },
-  surveyFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  surveyDate: {
-    fontSize: 12,
-    color: '#64748B',
-    marginLeft: 4,
-  },
-  emptyContainer: {
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: '#94A3B840',
-  },
-  emptyText: {
-    fontSize: 14,
-    marginTop: 8,
-  },
+  emptyTitle: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3, marginBottom: 4 },
+  emptySub: { fontSize: 13, textAlign: 'center' },
 });
