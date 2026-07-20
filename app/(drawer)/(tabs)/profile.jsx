@@ -9,7 +9,6 @@ export default function Profile() {
   const colorScheme = useColorScheme();
   const tc = Colors[colorScheme ?? 'light'];
   const { studentDetails, setStudentDetails } = useSurveys();
-  const isDark = colorScheme === 'dark';
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(studentDetails);

@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { View, Pressable, Text, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Colors, Spacing, Radius } from '../../../constants/theme';
+import { Colors } from '../../../constants/theme';
 import { useColorScheme } from '../../../hooks/use-color-scheme';
 import { DrawerToggleButton } from '@react-navigation/drawer';
 import { useSurveys } from '../../../context/SurveyContext';
@@ -12,6 +12,7 @@ export default function TabLayout() {
   const tc = Colors[colorScheme ?? 'light'];
   const router = useRouter();
   const isDark = colorScheme === 'dark';
+  const { toggleTheme } = useSurveys();
 
   return (
     <Tabs
@@ -57,7 +58,6 @@ export default function TabLayout() {
           <DrawerToggleButton tintColor={tc.text} />
         ),
         headerRight: () => {
-          const { toggleTheme } = useSurveys();
           return (
             <View style={styles.headerRightContainer}>
               <Pressable

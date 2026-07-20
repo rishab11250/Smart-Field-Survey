@@ -16,7 +16,6 @@ export default function Dashboard() {
   const { surveys, studentDetails } = useSurveys();
   const colorScheme = useColorScheme();
   const tc = Colors[colorScheme ?? 'light'];
-  const isDark = colorScheme === 'dark';
 
   const todayStr = new Date().toISOString().split('T')[0];
   const todayCount = surveys.filter(s => s.date === todayStr).length;

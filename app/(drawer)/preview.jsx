@@ -60,7 +60,7 @@ export default function SurveyPreview() {
             {currentSurvey.notes && (
               <View style={[styles.notesBlock, { borderTopColor: tc.divider }]}>
                 <Text style={[styles.sectionLabel, { color: tc.text }]}>Notes</Text>
-                <Text style={[styles.bodyText, { color: tc.textSecondary, fontStyle: 'italic' }]}>"{currentSurvey.notes}"</Text>
+                <Text style={[styles.bodyText, { color: tc.textSecondary, fontStyle: 'italic' }]}>{"\"" + currentSurvey.notes + "\""}</Text>
               </View>
             )}
           </View>
